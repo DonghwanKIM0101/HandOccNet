@@ -6,6 +6,7 @@ from torchvision import ops
 import torch
 
 from nets.cbam import SpatialGate
+from config import cfg
 
 class FPN(nn.Module):
     def __init__(self, pretrained=True):
@@ -41,7 +42,7 @@ class FPN(nn.Module):
         _, _, H, W = y.size()
         return F.interpolate(x, size=(H,W), mode='bilinear', align_corners=False) + y
 
-    def forward(self, x):
+    def forward(self, x, heatmap):
         # Bottom-up
         c1 = self.layer0(x)
         c2 = self.layer1(c1)
@@ -60,7 +61,7 @@ class FPN(nn.Module):
         
         # Attention
         p2 = self.pool(p2)
-        primary_feats, secondary_feats = self.attention_module(p2)
+        primary_feats, secondary_feats = self.attention_module(p2, heatmap * cfg.alpha_heatmap)
         
         return primary_feats, secondary_feats
 

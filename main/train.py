@@ -44,11 +44,12 @@ def main():
 
             # forward
             trainer.optimizer.zero_grad()
-            loss = trainer.model(inputs, targets, meta_info, 'train')
+            loss, loss_joint_base = trainer.model(inputs, targets, meta_info, 'train')
             loss = {k:loss[k].mean() for k in loss}
 
             # backward
-            sum(loss[k] for k in loss).backward()
+            total_loss = sum(loss[k] for k in loss)
+            total_loss.backward()
             trainer.optimizer.step()
             trainer.gpu_timer.toc()
             screen = [
@@ -58,7 +59,9 @@ def main():
                     trainer.tot_timer.average_time, trainer.gpu_timer.average_time, trainer.read_timer.average_time),
                 '%.2fh/epoch' % (trainer.tot_timer.average_time / 3600. * trainer.itr_per_epoch),
                 ]
+            screen += ['total_loss: %.4f' % (total_loss)]
             screen += ['%s: %.4f' % ('loss_' + k, v.detach()) for k,v in loss.items()]
+            screen += ['loss_joint_base: %.4f' % (loss_joint_base)]
             trainer.logger.info(' '.join(screen))
 
             trainer.tot_timer.toc()

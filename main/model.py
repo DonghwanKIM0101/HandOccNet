@@ -17,7 +17,8 @@ class Model(nn.Module):
         self.regressor = regressor
     
     def forward(self, inputs, targets, meta_info, mode):
-        p_feats, s_feats = self.backbone(inputs['img']) # primary, secondary feats
+        heatmap, _ = torch.max(inputs['heatmap'], dim=1, keepdim=True)
+        p_feats, s_feats = self.backbone(inputs['img'], heatmap) # primary, secondary feats
         feats = self.FIT(s_feats, p_feats)
         feats = self.SET(feats, feats)
 
@@ -35,7 +36,8 @@ class Model(nn.Module):
             loss['mano_pose'] = cfg.lambda_mano_pose * F.mse_loss(pred_mano_results['mano_pose'], gt_mano_results['mano_pose'])
             loss['mano_shape'] = cfg.lambda_mano_shape * F.mse_loss(pred_mano_results['mano_shape'], gt_mano_results['mano_shape'])
             loss['joints_img'] = cfg.lambda_joints_img * F.mse_loss(preds_joints_img[0], targets['joints_img'])
-            return loss
+            loss_joint_base = cfg.lambda_joints_img * F.mse_loss(inputs['joints_base'], targets['joints_img'])
+            return loss, loss_joint_base
 
         else:
             # test output

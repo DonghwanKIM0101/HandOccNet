@@ -5,6 +5,9 @@ from config import cfg
 import math
 import torchvision
 
+# import mediapipe as mp
+# mp_hands = mp.solutions.hands
+
 def load_img(path, order='RGB'):
     img = cv2.imread(path, cv2.IMREAD_COLOR | cv2.IMREAD_IGNORE_ORIENTATION)
     if not isinstance(img, np.ndarray):
@@ -13,8 +16,25 @@ def load_img(path, order='RGB'):
     if order=='RGB':
         img = img[:,:,::-1].copy()
     
+    # with mp_hands.Hands(
+    #     static_image_mode=True, max_num_hands=1, min_detection_confidence=0.5
+    # ) as hands:
+    #     results = hands.process(img)
+    #     coord = None
+    #     if results.multi_hand_landmarks is not None:
+    #         image_height, image_width, _ = img.shape
+    #         hand_landmarks = results.multi_hand_landmarks[0]
+            
+    #         coord = np.empty((21,2))
+    #         joints = [0, 13, 14, 15, 16, 1, 2, 3, 17, 4, 5, 6, 18, 10, 11, 12, 19, 7, 8, 9, 20]
+    #         for idx, joint in enumerate(joints):
+    #             coord[joint, 0] = hand_landmarks.landmark[idx].x * image_width
+    #             coord[joint, 1] = hand_landmarks.landmark[idx].y * image_height
+    #             # coord[joint, 2] = hand_landmarks.landmark[idx].z * image_width
+    coord = None
+
     img = img.astype(np.float32)
-    return img
+    return img, coord
 
 def get_bbox(joint_img, joint_valid, expansion_factor=1.0):
 

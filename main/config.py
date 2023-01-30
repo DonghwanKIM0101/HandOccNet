@@ -31,6 +31,7 @@ class Config:
     lambda_mano_shape = 0.1
     lambda_joints_img = 100
     ckpt_freq = 10
+    alpha_heatmap = 1.0
 
     ## testing config
     test_batch_size = 64

@@ -75,11 +75,16 @@ class SpatialGate(nn.Module):
         kernel_size = 7
         self.compress = ChannelPool()
         self.spatial = BasicConv(2, 1, kernel_size, stride=1, padding=(kernel_size-1) // 2, relu=False)
-    def forward(self, x):
+    def forward(self, x, heatmap):
         x_compress = self.compress(x)
         x_out = self.spatial(x_compress)
         scale = F.sigmoid(x_out) # broadcasting
-        return x*scale, x*(1-scale)
+        
+        scale_ = torch.cat([scale, heatmap], dim=1)
+        scale_, _ = torch.max(scale_, dim=1, keepdim=True)
+
+        # scale = scale * alpha + heatmap * (1 - alpha)
+        return x*scale_, x*(1-scale_)
 
 class CBAM(nn.Module):
     def __init__(self, gate_channels, reduction_ratio=16, pool_types=['avg', 'max'], no_spatial=False):
