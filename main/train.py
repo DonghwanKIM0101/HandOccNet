@@ -1,5 +1,7 @@
 import argparse
 from config import cfg
+import random
+import numpy as np
 import torch
 from base import Trainer
 import torch.backends.cudnn as cudnn
@@ -26,7 +28,7 @@ def seed(seed = 42):
     np.random.seed(seed) 
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
-    torch.backends.cudnn.benchmark = False
+    cudnn.benchmark = False
     torch.use_deterministic_algorithms(True)
     os.environ["PYTHONHASHSEED"] = str(seed)
 
@@ -36,7 +38,6 @@ def main():
     # argument parse and create log
     args = parse_args()
     cfg.set_args(args.gpu_ids, args.continue_train)
-    cudnn.benchmark = True
 
     trainer = Trainer()
     trainer._make_batch_generator()

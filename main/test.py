@@ -1,6 +1,7 @@
 import torch
 import argparse
 from tqdm import tqdm
+import random
 import numpy as np
 import torch.backends.cudnn as cudnn
 from config import cfg
@@ -29,7 +30,7 @@ def seed(seed = 42):
     np.random.seed(seed) 
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
-    torch.backends.cudnn.benchmark = False
+    cudnn.benchmark = False
     torch.use_deterministic_algorithms(True)
     os.environ["PYTHONHASHSEED"] = str(seed)
 
@@ -38,7 +39,6 @@ def main():
 
     args = parse_args()
     cfg.set_args(args.gpu_ids)
-    cudnn.benchmark = True
 
     tester = Tester(args.test_epoch)
     tester._make_batch_generator()
