@@ -41,6 +41,7 @@ class Config:
     gpu_ids = '0'
     num_gpus = 1
     continue_train = False
+    seed = 42
     
     ## directory
     cur_dir = osp.dirname(os.path.abspath(__file__))

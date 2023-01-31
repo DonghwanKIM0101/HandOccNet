@@ -4,6 +4,8 @@ import math
 import time
 import glob
 import abc
+import numpy as np
+import random
 from torch.utils.data import DataLoader
 import torch.optim
 import torchvision.transforms as transforms
@@ -39,6 +41,11 @@ class Base(object):
     @abc.abstractmethod
     def _make_model(self):
         return
+
+    def seed_worker(worker_id):
+        worker_seed = torch.initial_seed() % 2**32
+        np.random.seed(worker_seed)
+        random.seed(worker_seed)
 
 class Trainer(Base):
     def __init__(self):
@@ -89,7 +96,7 @@ class Trainer(Base):
         train_dataset = eval(cfg.trainset)(transforms.ToTensor(), "train")
             
         self.itr_per_epoch = math.ceil(len(train_dataset) / cfg.num_gpus / cfg.train_batch_size)
-        self.batch_generator = DataLoader(dataset=train_dataset, batch_size=cfg.num_gpus*cfg.train_batch_size, shuffle=True, num_workers=cfg.num_thread, pin_memory=True)
+        self.batch_generator = DataLoader(dataset=train_dataset, batch_size=cfg.num_gpus*cfg.train_batch_size, shuffle=True, num_workers=cfg.num_thread, pin_memory=True, worker_init_fn=self.seed_worker)
 
     def _make_model(self):
         # prepare network
@@ -117,7 +124,7 @@ class Tester(Base):
         # data load and construct batch generator
         self.logger.info("Creating dataset...")
         self.test_dataset = eval(cfg.testset)(transforms.ToTensor(), "test")
-        self.batch_generator = DataLoader(dataset=self.test_dataset, batch_size=cfg.num_gpus*cfg.test_batch_size, shuffle=False, num_workers=cfg.num_thread, pin_memory=True)
+        self.batch_generator = DataLoader(dataset=self.test_dataset, batch_size=cfg.num_gpus*cfg.test_batch_size, shuffle=False, num_workers=cfg.num_thread, pin_memory=True, worker_init_fn=self.seed_worker)
        
     def _make_model(self):
         model_path = os.path.join(cfg.model_dir, 'snapshot_%d.pth.tar' % self.test_epoch)
