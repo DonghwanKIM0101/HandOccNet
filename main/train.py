@@ -30,7 +30,6 @@ def seed(seed = 42):
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
     cudnn.benchmark = False
-    torch.use_deterministic_algorithms(True)
     os.environ["PYTHONHASHSEED"] = str(seed)
 
 def main():
