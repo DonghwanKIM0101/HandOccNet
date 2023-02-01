@@ -79,52 +79,38 @@ class HO3D(torch.utils.data.Dataset):
         img, img2bb_trans, bb2img_trans, rot, scale = augmentation(img, bbox, self.data_split, do_flip=False)
         img = self.transform(img.astype(np.float32))/255.
 
-        # if (coord is not None):
-        #     ## 2D base joint detection
-        #     coord_xy1 = np.concatenate((coord, np.ones_like(coord[:,:1])),1)
-        #     coord = np.dot(img2bb_trans, coord_xy1.transpose(1,0)).transpose(1,0)[:,:2]
+        if (coord is not None):
+            ## 2D base joint detection
+            coord_xy1 = np.concatenate((coord, np.ones_like(coord[:,:1])),1)
+            coord = np.dot(img2bb_trans, coord_xy1.transpose(1,0)).transpose(1,0)[:,:2]
 
-        #     ## heatmap generation
-        #     x = [i for i in range(cfg.input_img_shape[1])]
-        #     y = [i for i in range(cfg.input_img_shape[0])]
-        #     xx, yy = np.meshgrid(x, y)
-        #     xx = np.float32(xx).reshape(cfg.input_img_shape[1], cfg.input_img_shape[0], 1)
-        #     yy = np.float32(yy).reshape(cfg.input_img_shape[1], cfg.input_img_shape[0], 1)
-        #     x = coord[:, 0]
-        #     y = coord[:, 1]
-        #     heatmap = np.exp(-(((xx - x) / self.sigma) ** 2.0) / 2.0 - (((yy - y) / self.sigma) ** 2.0) / 2.0)
-        #     heatmap = self.transform(heatmap.astype(np.float32))
-        #     heatmap = torch.unsqueeze(heatmap, 0)
-        #     heatmap = F.interpolate(heatmap, size=(32,32), mode='bilinear').squeeze()
-
-        #     ## normalize to [0,1]
-        #     coord[:,0] /= cfg.input_img_shape[1]
-        #     coord[:,1] /= cfg.input_img_shape[0]
-        # else:
-        #     # heatmap = np.zeros((cfg.input_img_shape[1], cfg.input_img_shape[0], 21))
-        #     heatmap = np.zeros((32, 32, 21))
-        #     heatmap = self.transform(heatmap.astype(np.float32))
-        #     coord = np.zeros((21,2))
-
-        if self.data_split == 'train':
-            ## 2D joint coordinate
-            joints_img = data['joints_coord_img']
-            joints_img_xy1 = np.concatenate((joints_img[:,:2], np.ones_like(joints_img[:,:1])),1)
-            joints_img = np.dot(img2bb_trans, joints_img_xy1.transpose(1,0)).transpose(1,0)[:,:2]
-            
             ## heatmap generation
             x = [i for i in range(cfg.input_img_shape[1])]
             y = [i for i in range(cfg.input_img_shape[0])]
             xx, yy = np.meshgrid(x, y)
             xx = np.float32(xx).reshape(cfg.input_img_shape[1], cfg.input_img_shape[0], 1)
             yy = np.float32(yy).reshape(cfg.input_img_shape[1], cfg.input_img_shape[0], 1)
-            x = joints_img[:, 0]
-            y = joints_img[:, 1]
+            x = coord[:, 0]
+            y = coord[:, 1]
             heatmap = np.exp(-(((xx - x) / self.sigma) ** 2.0) / 2.0 - (((yy - y) / self.sigma) ** 2.0) / 2.0)
             heatmap = self.transform(heatmap.astype(np.float32))
             heatmap = torch.unsqueeze(heatmap, 0)
             heatmap = F.interpolate(heatmap, size=(32,32), mode='bilinear').squeeze()
-            
+
+            ## normalize to [0,1]
+            coord[:,0] /= cfg.input_img_shape[1]
+            coord[:,1] /= cfg.input_img_shape[0]
+        else:
+            # heatmap = np.zeros((cfg.input_img_shape[1], cfg.input_img_shape[0], 21))
+            heatmap = np.zeros((32, 32, 21))
+            heatmap = self.transform(heatmap.astype(np.float32))
+            coord = np.zeros((21,2))
+
+        if self.data_split == 'train':
+            ## 2D joint coordinate
+            joints_img = data['joints_coord_img']
+            joints_img_xy1 = np.concatenate((joints_img[:,:2], np.ones_like(joints_img[:,:1])),1)
+            joints_img = np.dot(img2bb_trans, joints_img_xy1.transpose(1,0)).transpose(1,0)[:,:2]
             # normalize to [0,1]
             joints_img[:,0] /= cfg.input_img_shape[1]
             joints_img[:,1] /= cfg.input_img_shape[0]
@@ -149,8 +135,7 @@ class HO3D(torch.utils.data.Dataset):
             mano_pose[self.root_joint_idx] = root_pose.reshape(3)
             mano_pose = mano_pose.reshape(-1)
 
-            # inputs = {'img': img, 'heatmap': heatmap, 'joints_base': coord}
-            inputs = {'img': img, 'heatmap': heatmap, 'joints_base': joints_img}
+            inputs = {'img': img, 'heatmap': heatmap, 'joints_base': coord}
             targets = {'joints_img': joints_img, 'joints_coord_cam': joints_coord_cam, 'mano_pose': mano_pose, 'mano_shape': mano_shape}
             meta_info = {'root_joint_cam': root_joint_cam}
 
