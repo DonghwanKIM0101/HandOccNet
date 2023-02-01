@@ -17,7 +17,7 @@ class Config:
     if trainset == 'HO3D':
         lr_dec_epoch = [10*i for i in range(1,7)]
         end_epoch = 70
-        lr = 1e-4
+        lr = 1e-4 * 1/4
         lr_dec_factor = 0.7
     elif trainset == 'DEX_YCB':
         lr_dec_epoch = [i for i in range(1,25)]
@@ -41,7 +41,7 @@ class Config:
     gpu_ids = '0'
     num_gpus = 1
     continue_train = False
-    seed = 42
+    seed = 12345
     
     ## directory
     cur_dir = osp.dirname(os.path.abspath(__file__))
